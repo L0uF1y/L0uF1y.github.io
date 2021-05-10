@@ -1,0 +1,54 @@
+layout: post
+title: LOFFER文档
+date: 2021-4-10
+Author:L0uF1y
+categories: 
+tags: [Golang, Concurrent]
+comments: true
+#Golang 百万级并发
+* 基本请求格式 爬虫为例
+```
+type Request struct{
+	Req string
+	Dofunc func([] byte) Doresult
+}// 
+type Doresult struct{
+	Request[] Request
+	Res [] interface{}
+}// req 请求的url Dofunc页面的执行函数
+```
+* 并发的单位 -staff
+```
+type QueScheduler struct{
+	requestChan chan mainengine.Request    //请求chan
+	staffChan chan chan mainengine.Request//每一个工人都分配一个协程
+}
+```
+* 并发的核心 队列调度
+```
+func(q *QueScheduler) Run(){
+	q.staffChan = make(chan chan mainengine.Request)
+	q.requestChan = make(chan mainengine.Request)
+	go func(){
+		var reque []mainengine.Request
+		var staffque [] chan mainengine.Request
+		for{
+			var actreq mainengine.Request
+			var actwork chan mainengine.Request
+			if len(reque) > 0 && len(staffque) > 0{
+				actreq =reque[0]
+				actwork = staffque[0]
+			}
+			select{
+				case r := <-q.requestChan:
+					reque = append(reque,r)
+				case w := <-q.staffChan:
+					staffque = append(staffque,w)
+				case actwork <- actreq://work :向 in 里面加入request
+					staffque = staffque[1:]
+				 	reque = reque[1:]
+			}
+		}
+	}()
+```
+这里的原理简单说明,当一个工人完成任务后staffchan <- w 一个空request chan 进入,相当于一个工人已经空闲,将工人加入到空闲队列,只要再等到一个request出现,就可以把这个request交给这个工人来进行完成,然后将这个工人出队,最后再将得到的结果再加入request(爬虫可能有好几轮request)
