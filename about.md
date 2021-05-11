@@ -1,9 +1,9 @@
 ---
 layout: page
-title: 关于
+title: L0uF1y
 permalink: /about/
 ---
-## L0uF1y
+
 >**熟悉Golang/Python/C 会一点php/java**
 
 
